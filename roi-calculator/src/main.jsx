@@ -9,7 +9,7 @@ import { ThemeProvider } from './context/ThemeContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.VITE_ROUTER_BASENAME || '/'}>
       <Routes>
         <Route path="/" element={
           <ThemeProvider>
