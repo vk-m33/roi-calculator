@@ -37,7 +37,7 @@ function CheckIcon() {
     <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5"
          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 12 4 9"/>
+      <polyline points="4 13 9 18 20 6"/>
     </svg>
   )
 }
@@ -334,7 +334,7 @@ const FEATURES = [
 
 function Features() {
   return (
-    <section className="bg-gray-50 dark:bg-gray-800 py-20 px-4 sm:px-6">
+    <section className="bg-gray-50 dark:bg-gray-900 py-20 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">

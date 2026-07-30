@@ -618,3 +618,70 @@ to `document.documentElement` (line 14–16 of ThemeContext.jsx) and persists th
 - AC-12: releases.json validated — 4 entries, correct schema, available booleans, url:null for disabled
 - AC-13: title, meta description (80+ chars), og:title, og:description, og:type all present
 - AC-14: LandingPage is a child of ThemeProvider; Navbar calls useTheme() and renders toggle; all sections use dark: variants; responsive grid (1→2→4 col for features)
+
+---
+
+## QA Sign-off
+
+**QA run date:** 2026-07-30
+
+**QA mode:** Mode 2 — Feature Verification (FEAT-002) + Mode 1 — Full Regression (`/app`)
+
+**Overall result: PASS — all 14 acceptance criteria verified**
+
+---
+
+### AC Verdict Table
+
+| AC | Description | Result | Notes |
+|----|-------------|--------|-------|
+| AC-01 | Hero CTAs | PASS | h1 = "Calculate ROI with Confidence" (exact). Primary CTA `<Link to="/app">Start Calculating</Link>`. Secondary CTA calls `scrollIntoView({behavior:'smooth'})`. `AppMockup` present with `aria-hidden="true"`. |
+| AC-02 | Features grid (8 items) | PASS | All 8 feature titles present as distinct `<div>` cards: ROI Calculations, Comparison Mode, Monthly Breakdown Table, Interactive Charts, PDF Export, Dark Mode, Embeddable Widget, Offline Desktop Version. |
+| AC-03 | Benefits list (5 items) | PASS | All 5 concepts present as `<li>` items: Evaluate business investments, Compare multiple scenarios, Track break-even points, Generate professional reports, Work online or offline. |
+| AC-04 | How It Works — 3 steps | PASS | Exactly 3 steps numbered 1/2/3. Step 1 = Enter Investment Data, Step 2 = Analyse ROI & Projections, Step 3 = Export & Share Results. |
+| AC-05 | Desktop Version section | PASS | Describes offline operation, local data storage, and privacy. Version (`v0.1.0`) sourced from `releases.json`. "Download Now" button calls `scrollIntoView`. Windows and macOS badges present. |
+| AC-06 | Download section — platform buttons | PASS | `id="download"` on section. Windows Installer and Portable rendered as active `<a href="...">` elements. macOS DMG and Linux AppImage rendered as `<span aria-disabled="true">Coming Soon</span>` (non-interactive, no `href`). |
+| AC-07 | Technical Features (5 items) | PASS | All 5 items present as cards: Offline Support, Local Data Storage, Fast Calculations, Responsive Design, Secure Data Handling. |
+| AC-08 | Use Case cards (4 items) | PASS | Exactly 4 cards: Startup Founders, Marketing Managers, Financial Analysts, Small Business Owners. Each has a role label and descriptive quote. |
+| AC-09 | FAQ — 5 questions | PASS | All 5 topics covered: free to use, offline capability, data storage, multi-investment comparison, PDF export. Single-open accordion with `<button aria-expanded>` toggle. |
+| AC-10 | Footer | PASS | Version `Release v0.1.0` (from releases.json). Documentation link present (`<Link to="/app">`). Contact email `support@roi-calculator.app`. `<a href="#privacy">Privacy Policy</a>`. `<a href="#terms">Terms of Service</a>`. |
+| AC-11 | Route migration | PASS | `/` → `<ThemeProvider><LandingPage /></ThemeProvider>`. `/app` → `<ThemeProvider><App /></ThemeProvider>`. `/embed` → `<EmbedPage />` unchanged. No other routes added or removed. |
+| AC-12 | Releases manifest schema | PASS | `version: "0.1.0"`, `releaseDate: "2026-07-30"` (ISO 8601). Exactly 4 download objects. All required fields present (`platform`, `type`, `label`, `filename`, `sizeBytes`, `url`, `available`). Windows entries `available: true` with non-null `url`; macOS/Linux `available: false` with `url: null`. |
+| AC-13 | SEO meta tags | PASS | `<title>ROI Calculator — Analyze Investments with Confidence</title>` (not the placeholder "roi-calculator"). Meta description 101 chars. `og:title`, `og:description`, `og:type="website"` all present. No duplicates. |
+| AC-14 | Dark mode & theming | PASS | `LandingPage` is a descendant of `ThemeProvider` at the `/` route. `Navbar` calls `useTheme()` and renders a theme-toggle button. All sections use `dark:` Tailwind variants. Animations use Tailwind `transition-*`/`hover:*` only (no `setInterval`). |
+
+---
+
+### Mode 1 Regression — Calculator at `/app`
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| `/app` route renders `App` component | PASS | `<ThemeProvider><App /></ThemeProvider>` at line 19 of `src/main.jsx`. Wrapping pattern identical to the original `/` route. |
+| `App.jsx` unchanged | PASS | File not modified by FEAT-002. CalculatorCore, EmbedModal, ThemeToggle all intact. |
+| `CalculatorCore.jsx` unchanged | PASS | File not modified. Imports InputForm, ResultCards, PaybackChart, VarianceRow, MonthlyBreakdown — all intact. |
+| `EmbedPage.jsx` unchanged | PASS | File not modified. `/embed` route still uses `EmbedThemeProvider`. |
+| `ThemeContext.jsx` unchanged | PASS | File not modified. `useTheme()`, `ThemeProvider`, `EmbedThemeProvider` all intact. |
+| `npm run build` exits 0 | PASS | Build successful in 934 ms. Large-chunk warning for Recharts + jspdf is pre-existing; no new code contributed to it. |
+| No Tauri imports in `LandingPage.jsx` | PASS | `grep @tauri-apps` returns no matches. Imports are: `react`, `react-router-dom`, `../context/ThemeContext`. |
+
+---
+
+### Low-Severity Observations (non-blocking)
+
+**OBS-001 — CheckIcon SVG path renders incorrect shape (cosmetic)**
+- File: `src/pages/LandingPage.jsx`, line 41
+- Observed: `<polyline points="20 6 9 12 4 9"/>` draws from upper-right (20,6) to center (9,12) to left (4,9) — a reversed zigzag, not a standard checkmark.
+- Expected: A standard checkmark path such as `4 13 9 18 20 6` (lower-left → center → upper-right).
+- Impact: The Benefits section icon is decorative; all five benefit text items are present and readable. No AC is violated.
+- Severity: LOW — cosmetic only.
+
+**OBS-002 — Features section: card and section background identical in dark mode (cosmetic)**
+- File: `src/pages/LandingPage.jsx`, lines 337 and 350
+- Observed: `<section className="... dark:bg-gray-800 ...">` and each card `<div className="... dark:bg-gray-800 ...">` share the same dark background. In dark mode the card boundaries are implied only by `dark:border-gray-700` with no background contrast.
+- Expected: Cards should use `dark:bg-gray-900` (or another shade darker than `gray-800`) so they are visually distinct from the section background, consistent with the `App.jsx` pattern of page `dark:bg-gray-950` + cards `dark:bg-gray-800`.
+- Impact: Text contrast is unaffected (white on gray-800 passes WCAG AA). Visual card separation is minimal but present via the border. No text legibility AC is violated.
+- Severity: LOW — cosmetic/UX polish.
+
+---
+
+**QA Sign-off:** All 14 acceptance criteria PASS. Two low-severity cosmetic observations filed (OBS-001, OBS-002); neither blocks release. Feature is approved for merge.
