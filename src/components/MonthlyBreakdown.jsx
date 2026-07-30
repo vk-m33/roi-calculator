@@ -1,10 +1,5 @@
 import { useState } from 'react'
-
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
+import { currency } from '../utils/formatters'
 
 const COLUMNS = [
   { key: 'month',      label: 'Month',         align: 'left'  },

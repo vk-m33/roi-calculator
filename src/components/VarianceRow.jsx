@@ -1,8 +1,4 @@
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
+import { currency } from '../utils/formatters'
 
 function roiVariance(a, b) {
   const delta = b.roi - a.roi

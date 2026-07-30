@@ -1,8 +1,4 @@
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
+import { currency } from '../utils/formatters'
 
 function fmtRoi(n) {
   return `${n >= 0 ? '+' : ''}${n.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
