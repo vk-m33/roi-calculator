@@ -1,5 +1,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { save as tauriSave } from '@tauri-apps/plugin-dialog'
+import { writeFile } from '@tauri-apps/plugin-fs'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const PW = 210           // A4 width mm
@@ -414,5 +416,17 @@ export async function exportPDF({
   }
 
   // Security: filename uses system date only; no user input is interpolated; no sanitisation required.
-  doc.save(`ROI-Analysis-${isoDate()}.pdf`)
+  const isTauri = typeof window.__TAURI__ !== 'undefined'
+  if (isTauri) {
+    const filePath = await tauriSave({
+      defaultPath: `ROI-Analysis-${isoDate()}.pdf`,
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    })
+    if (filePath) {
+      const pdfBytes = doc.output('arraybuffer')
+      await writeFile(filePath, new Uint8Array(pdfBytes))
+    }
+  } else {
+    doc.save(`ROI-Analysis-${isoDate()}.pdf`)
+  }
 }

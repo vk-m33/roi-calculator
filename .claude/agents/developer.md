@@ -50,6 +50,13 @@ Process all files in `features/` where `Status: READY`.
 - Each feature must leave `npm run build` clean and must not break existing functionality.
 - If a feature touches `CalculatorCore.jsx`, read it fully before editing — it is the core of the app.
 
+**WebView2 compatibility (Tauri desktop):** This app runs in both a browser and WebView2 (Tauri). The following browser APIs do NOT work in WebView2 and must take a Tauri-specific path:
+- `<a href="blob:…" download>` / `URL.createObjectURL` + programmatic click — use `tauri-plugin-dialog` `save()` + `tauri-plugin-fs` `writeFile()` instead.
+- `window.open` for file downloads — use `tauri-plugin-opener` or the above pattern.
+- `navigator.clipboard.writeText` — works in WebView2 but only in a secure context; test explicitly.
+
+For any feature touching file I/O or OS dialogs: branch on `typeof window.__TAURI__ !== 'undefined'` and implement both paths. Failure to do so is a defect (it will be caught by QA as a FAIL).
+
 ---
 
 ## Processing order
