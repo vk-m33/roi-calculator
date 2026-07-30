@@ -7,26 +7,26 @@
       "platform": "windows",
       "type": "installer",
       "label": "Windows Installer (.exe)",
-      "filename": "ROI-Calculator_0.1.0_x64-setup.exe",
-      "sizeBytes": null,
-      "url": "/downloads/ROI-Calculator_0.1.0_x64-setup.exe",
+      "filename": "ROI Calculator_0.1.0_x64-setup.exe",
+      "size": "2.5 MB",
+      "url": "https://github.com/vk-m33/roi-calculator/releases/download/v0.1.0/ROI.Calculator_0.1.0_x64-setup.exe",
       "available": true
     },
     {
       "platform": "windows",
-      "type": "portable",
-      "label": "Windows Portable (.exe)",
-      "filename": "ROI-Calculator_0.1.0_x64.exe",
-      "sizeBytes": null,
-      "url": "/downloads/ROI-Calculator_0.1.0_x64.exe",
+      "type": "msi",
+      "label": "Windows MSI Package",
+      "filename": "ROI Calculator_0.1.0_x64_en-US.msi",
+      "size": "3.5 MB",
+      "url": "https://github.com/vk-m33/roi-calculator/releases/download/v0.1.0/ROI.Calculator_0.1.0_x64_en-US.msi",
       "available": true
     },
     {
       "platform": "macos",
       "type": "dmg",
       "label": "macOS Installer (.dmg)",
-      "filename": "ROI-Calculator_0.1.0_x64.dmg",
-      "sizeBytes": null,
+      "filename": null,
+      "size": null,
       "url": null,
       "available": false
     },
@@ -34,8 +34,8 @@
       "platform": "linux",
       "type": "appimage",
       "label": "Linux AppImage",
-      "filename": "ROI-Calculator_0.1.0_amd64.AppImage",
-      "sizeBytes": null,
+      "filename": null,
+      "size": null,
       "url": null,
       "available": false
     }
