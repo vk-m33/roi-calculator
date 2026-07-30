@@ -9,21 +9,17 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { useTheme } from '../context/ThemeContext'
+import { currency } from '../utils/formatters'
 
 const COLOR_A = '#818cf8' // indigo-400
 const COLOR_B = '#fb923c' // orange-400
 
+// Compact formatter used only for Y-axis tick labels — different from the full `currency` formatter
 const compact = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
   notation: 'compact',
   maximumFractionDigits: 1,
-})
-
-const full = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
 })
 
 const TICK_INTERVAL = { 12: 3, 24: 4, 36: 6 }
@@ -49,7 +45,7 @@ function CustomTooltip({ active, payload, label, isDark }) {
               {p.dataKey === 'A' ? 'Scenario A' : 'Scenario B'}
             </span>
             <span className={p.value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
-              {full.format(p.value)}
+              {currency.format(p.value)}
             </span>
           </div>
         ) : null

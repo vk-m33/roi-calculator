@@ -2,6 +2,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { save as tauriSave } from '@tauri-apps/plugin-dialog'
 import { writeFile } from '@tauri-apps/plugin-fs'
+import { currency } from './formatters'
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const PW = 210           // A4 width mm
@@ -26,9 +27,6 @@ const C = {
 }
 
 // ── Formatters ───────────────────────────────────────────────────────────────
-const currency = new Intl.NumberFormat('en-US', {
-  style: 'currency', currency: 'USD', maximumFractionDigits: 0,
-})
 
 function fmtRoi(n)  { return `${n >= 0 ? '+' : ''}${n.toFixed(1)}%` }
 function fmtPay(m)  { return m === null ? 'Never' : `${m.toFixed(1)} mo` }
