@@ -416,15 +416,20 @@ export async function exportPDF({
   }
 
   // Security: filename uses system date only; no user input is interpolated; no sanitisation required.
-  const isTauri = typeof window.__TAURI__ !== 'undefined'
+  const isTauri = typeof window.__TAURI_INTERNALS__ !== 'undefined'
   if (isTauri) {
-    const filePath = await tauriSave({
-      defaultPath: `ROI-Analysis-${isoDate()}.pdf`,
-      filters: [{ name: 'PDF', extensions: ['pdf'] }],
-    })
-    if (filePath) {
-      const pdfBytes = doc.output('arraybuffer')
-      await writeFile(filePath, new Uint8Array(pdfBytes))
+    try {
+      const filePath = await tauriSave({
+        defaultPath: `ROI-Analysis-${isoDate()}.pdf`,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      })
+      if (filePath) {
+        const pdfBytes = doc.output('arraybuffer')
+        await writeFile(filePath, new Uint8Array(pdfBytes))
+      }
+    } catch (err) {
+      console.error('PDF export failed:', err)
+      alert(`PDF export failed: ${err?.message ?? err}`)
     }
   } else {
     doc.save(`ROI-Analysis-${isoDate()}.pdf`)

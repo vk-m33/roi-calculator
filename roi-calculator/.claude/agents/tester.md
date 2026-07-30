@@ -21,7 +21,7 @@ Verify all established features by reading source code. For each feature below, 
 2. **Input Validation** — required fields, numeric constraints, inline error messages, results gated when invalid.
 3. **Comparison Mode** — add scenario, rename labels, remove individual scenario, side-by-side layout, winner badge.
 4. **Monthly Breakdown Table** — row count matches period, correct cumulative P/L, break-even highlight.
-5. **PDF Export** — chart captured, metrics table, monthly breakdown table all present in output. Verify the export path is Tauri-aware: `src/utils/exportPDF.js` must use `window.__TAURI__` detection and call `tauriSave` + `writeFile` for the desktop path, not `doc.save()` alone.
+5. **PDF Export** — chart captured, metrics table, monthly breakdown table all present in output. Verify the export path is Tauri-aware: `src/utils/exportPDF.js` must use `window.__TAURI_INTERNALS__` detection (Tauri v2 / WebView2-compatible) and call `tauriSave` + `writeFile` for the desktop path, not `doc.save()` alone.
 6. **Dark Mode / Theme Toggle** — `.dark` class on `<html>`, localStorage persistence, system preference fallback.
 7. **Embed Widget** — `/embed` route, `?theme=` param, EmbedModal iframe snippet, copy-to-clipboard.
 8. **Tauri Desktop Build** — `src-tauri/target/release/roi-calculator.exe` exists, `tauri.conf.json` valid. For any feature involving file downloads, saves, or system dialogs, explicitly verify the code takes a WebView2-compatible path (not just a browser blob-URL approach).
@@ -29,7 +29,7 @@ Verify all established features by reading source code. For each feature below, 
 
 Also run `npm run build` and check for `console.error`, `TODO`, `FIXME` in `src/`.
 
-**WebView2 compatibility check** — for any feature involving file downloads, `<a download>`, `URL.createObjectURL`, `fetch` to a local path, or native OS dialogs: confirm the code branches on `typeof window.__TAURI__ !== 'undefined'` and uses the appropriate Tauri plugin (`tauri-plugin-dialog`, `tauri-plugin-fs`) for the desktop path. A web-only implementation of these features is a FAIL.
+**WebView2 compatibility check** — for any feature involving file downloads, `<a download>`, `URL.createObjectURL`, `fetch` to a local path, or native OS dialogs: confirm the code branches on `typeof window.__TAURI_INTERNALS__ !== 'undefined'` (Tauri v2 — more reliable than `window.__TAURI__` in WebView2) and uses the appropriate Tauri plugin (`tauri-plugin-dialog`, `tauri-plugin-fs`) for the desktop path. A web-only implementation of these features is a FAIL.
 
 ---
 
