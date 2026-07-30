@@ -1,0 +1,43 @@
+{
+  "version": "0.1.0",
+  "releaseDate": "2026-07-30",
+  "changelog": "Initial release",
+  "downloads": [
+    {
+      "platform": "windows",
+      "type": "installer",
+      "label": "Windows Installer (.exe)",
+      "filename": "ROI-Calculator_0.1.0_x64-setup.exe",
+      "sizeBytes": null,
+      "url": "/downloads/ROI-Calculator_0.1.0_x64-setup.exe",
+      "available": true
+    },
+    {
+      "platform": "windows",
+      "type": "portable",
+      "label": "Windows Portable (.exe)",
+      "filename": "ROI-Calculator_0.1.0_x64.exe",
+      "sizeBytes": null,
+      "url": "/downloads/ROI-Calculator_0.1.0_x64.exe",
+      "available": true
+    },
+    {
+      "platform": "macos",
+      "type": "dmg",
+      "label": "macOS Installer (.dmg)",
+      "filename": "ROI-Calculator_0.1.0_x64.dmg",
+      "sizeBytes": null,
+      "url": null,
+      "available": false
+    },
+    {
+      "platform": "linux",
+      "type": "appimage",
+      "label": "Linux AppImage",
+      "filename": "ROI-Calculator_0.1.0_amd64.AppImage",
+      "sizeBytes": null,
+      "url": null,
+      "available": false
+    }
+  ]
+}
