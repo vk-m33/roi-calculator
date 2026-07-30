@@ -1,12 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import InputForm from './InputForm'
 import ResultCards from './ResultCards'
 import PaybackChart from './PaybackChart'
 import VarianceRow from './VarianceRow'
 import MonthlyBreakdown from './MonthlyBreakdown'
-import { exportPDF } from '../utils/exportPDF'
-import { DEFAULT_INPUTS } from '../constants'
-import { validate, isFormValid, toVisible, calculate } from '../utils/calculations'
+import { useScenarioState } from '../hooks/useScenarioState'
 
 function ScenarioLabel({ label, onRename, winner, onDelete }) {
   const [editing, setEditing] = useState(false)
@@ -101,61 +99,13 @@ function ExportButton({ loading, error, onClick }) {
 }
 
 export default function CalculatorCore() {
-  const [inputs, setInputs] = useState({ ...DEFAULT_INPUTS })
-  const [inputsB, setInputsB] = useState({ ...DEFAULT_INPUTS })
-  const [comparing, setComparing] = useState(false)
-  const [touchedA, setTouchedA] = useState({})
-  const [touchedB, setTouchedB] = useState({})
-  const [exporting, setExporting] = useState(false)
-  const [exportError, setExportError] = useState(null)
-  const [labelA, setLabelA] = useState('Scenario A')
-  const [labelB, setLabelB] = useState('Scenario B')
-  const chartRef = useRef(null)
-
-  const allErrorsA = validate(inputs)
-  const allErrorsB = validate(inputsB)
-  const errorsA = toVisible(allErrorsA, touchedA)
-  const errorsB = toVisible(allErrorsB, touchedB)
-  const isValidA = isFormValid(allErrorsA)
-  const isValidB = isFormValid(allErrorsB)
-
-  const handleBlurA = (field) => setTouchedA((t) => ({ ...t, [field]: true }))
-  const handleBlurB = (field) => setTouchedB((t) => ({ ...t, [field]: true }))
-
-  const resultsA = isValidA ? calculate(inputs) : null
-  const resultsB = isValidB ? calculate(inputsB) : null
-
-  const aWins = !!(resultsA && resultsB && resultsA.roi >= resultsB.roi)
-  const bWins = !!(resultsA && resultsB && resultsB.roi > resultsA.roi)
-
-  const maxPeriod = Math.max(parseInt(inputs.period) || 12, parseInt(inputsB.period) || 12)
-
-  const toggleCompare = () => {
-    if (!comparing) {
-      setInputsB({ ...inputs })
-      setTouchedB({})
-    }
-    setComparing((c) => !c)
-  }
-
-  const deleteScenarioB = () => {
-    setComparing(false)
-    setInputsB({ ...DEFAULT_INPUTS })
-    setTouchedB({})
-    setLabelB('Scenario B')
-  }
-
-  const handleExport = async () => {
-    setExporting(true)
-    setExportError(null)
-    try {
-      await exportPDF({ inputs, inputsB, resultsA, resultsB, comparing, chartRef })
-    } catch {
-      setExportError('Failed to generate PDF. Please try again.')
-    } finally {
-      setExporting(false)
-    }
-  }
+  const {
+    inputs, setInputs, errorsA, handleBlurA, resultsA, labelA, setLabelA, aWins,
+    inputsB, setInputsB, errorsB, handleBlurB, resultsB, labelB, setLabelB, bWins,
+    comparing, toggleCompare, deleteScenarioB, maxPeriod,
+    exporting, exportError, handleExport,
+    chartRef,
+  } = useScenarioState()
 
   return (
     <div className="space-y-8">
