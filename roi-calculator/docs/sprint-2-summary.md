@@ -44,7 +44,7 @@ Both cosmetic observations were fixed before merge.
 | Benefits | 5 items — evaluate investments, compare scenarios, break-even tracking, professional reports, online/offline |
 | How It Works | 3-step process with connector line on desktop |
 | Desktop Version | Platform badges, version number from manifest, offline/privacy highlights |
-| Download | Dynamic cards from `/api/releases.json` — Windows active, macOS/Linux "Coming Soon" |
+| Download | Dynamic cards from GitHub Releases API — Windows active, macOS/Linux "Coming Soon"; auto-updates with every new release |
 | Technical Features | 5 cards — offline, local storage, fast calculations, responsive, secure |
 | Use Cases | 4 quote cards — Startup Founders, Marketing Managers, Financial Analysts, Small Business Owners |
 | FAQ | 5 accordion items (click to expand) |
@@ -55,7 +55,7 @@ Both cosmetic observations were fixed before merge.
 | File | Purpose |
 |---|---|
 | `src/pages/LandingPage.jsx` | Full landing page (~430 lines) |
-| `public/api/releases.json` | Version manifest — platform availability, file sizes, download URLs |
+| `public/api/releases.json` | Static fallback manifest (superseded by GitHub Releases API — kept for reference) |
 | `.github/workflows/deploy.yml` | GitHub Actions — auto-deploy to GitHub Pages on every push to master |
 
 ### Files modified
@@ -92,6 +92,8 @@ Push to master → GitHub Action runs `npm run build` with correct base path →
 | Checkmark SVG drew wrong shape | `polyline points="20 6 9 12 4 9"` was a reversed zigzag | Corrected to `"4 13 9 18 20 6"` |
 | Feature cards invisible in dark mode | Section and cards both used `dark:bg-gray-800` | Section changed to `dark:bg-gray-900` for contrast |
 | Download section showed "temporarily unavailable" | `fetch('/api/releases.json')` used absolute path, broken under `/roi-calculator/` base | Changed to `fetch(\`${import.meta.env.BASE_URL}api/releases.json\`)` |
+| Download buttons returned 404 | Download URLs pointed to `/downloads/...` — files were never committed to git (gitignored build artefacts) | Switched to GitHub Releases; installers uploaded as release assets at `v0.1.0` |
+| Download section would require manual updates per release | Static `releases.json` had hardcoded version, URLs, and file sizes | Replaced with `fetch('https://api.github.com/repos/vk-m33/roi-calculator/releases/latest')` + `transformGithubRelease()` — version, sizes, and URLs now come directly from GitHub automatically |
 
 ---
 
@@ -113,7 +115,19 @@ Push to master → GitHub Action runs `npm run build` with correct base path →
 86546fb  merge: feature/landing-page — high-converting landing page
 d7363ac  feat: add GitHub Pages deployment workflow and base path config
 38b47db  fix: use BASE_URL prefix for releases.json fetch on GitHub Pages
+c4f5685  fix: point download URLs to GitHub Releases
+ad473ba  feat: fetch downloads from GitHub Releases API instead of static JSON
 ```
+
+---
+
+## How to Ship a New Desktop Release
+
+1. Run `npm run tauri:build` to produce new installers
+2. Go to `https://github.com/vk-m33/roi-calculator/releases/new`
+3. Create a new tag (e.g. `v0.2.0`), upload the `.exe` and `.msi` from `src-tauri/target/release/bundle/`, publish
+4. The landing page download section updates automatically — no code changes needed
+5. Push any code changes to `master` to trigger a web redeploy
 
 ---
 
@@ -121,6 +135,9 @@ d7363ac  feat: add GitHub Pages deployment workflow and base path config
 
 - Landing page live at https://vk-m33.github.io/roi-calculator/
 - Calculator live at https://vk-m33.github.io/roi-calculator/app
+- GitHub repo at https://github.com/vk-m33/roi-calculator
+- GitHub Release `v0.1.0` with Windows installers published
 - Desktop app (Tauri) unchanged — still works with base path `/`
 - Auto-deploy on every push to master via GitHub Actions
+- Download section auto-updates from GitHub Releases API — no manual maintenance
 - All features QA-verified, no open bugs
