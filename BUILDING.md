@@ -29,9 +29,9 @@ Download from https://visualstudio.microsoft.com/visual-cpp-build-tools/ and ins
 
 ### 1c. WebView2 (end-user runtime)
 
-Pre-installed on Windows 10 21H2+ and Windows 11. The installer produced by `tauri build`
-embeds a small bootstrapper that automatically downloads and installs WebView2 on older
-machines.
+Pre-installed on Windows 10 21H2+ and Windows 11. No installation needed for end users on
+modern Windows. On older machines (Windows 10 before 21H2), users must install WebView2 separately
+from https://developer.microsoft.com/en-us/microsoft-edge/webview2/
 
 ---
 
@@ -41,15 +41,14 @@ machines.
 # Install all npm dependencies (including @tauri-apps/cli)
 npm install
 
-# Generate app icons from the project's hero image
-# This creates all required sizes in src-tauri/icons/
-npm run tauri icon src/assets/hero.png
+# Generate app icons (creates all required sizes in src-tauri/icons/)
+npm run tauri icon src/assets/app-icon.svg
 ```
 
 The `tauri icon` command generates:
 `32x32.png`, `128x128.png`, `128x128@2x.png`, `icon.icns`, `icon.ico`
 
-To use a custom icon, replace `src/assets/hero.png` with any square PNG ≥ 1024×1024 px.
+To use a custom icon, replace `src/assets/app-icon.svg` with any square SVG or PNG ≥ 1024×1024 px.
 
 ---
 

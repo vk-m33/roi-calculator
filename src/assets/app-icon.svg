@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="180" fill="#0f0b1e"/>
+  <!-- chart bars background -->
+  <rect x="160" y="520" width="120" height="280" rx="16" fill="#3b1f6e" opacity="0.6"/>
+  <rect x="320" y="400" width="120" height="400" rx="16" fill="#3b1f6e" opacity="0.6"/>
+  <rect x="480" y="300" width="120" height="500" rx="16" fill="#3b1f6e" opacity="0.6"/>
+  <rect x="640" y="200" width="120" height="600" rx="16" fill="#3b1f6e" opacity="0.6"/>
+  <!-- chart bars foreground (taller/brighter) -->
+  <rect x="160" y="620" width="120" height="180" rx="16" fill="#863bff"/>
+  <rect x="320" y="480" width="120" height="320" rx="16" fill="#9d5cff"/>
+  <rect x="480" y="360" width="120" height="440" rx="16" fill="#b47fff"/>
+  <rect x="640" y="260" width="120" height="540" rx="16" fill="#c9a3ff"/>
+  <!-- trend line -->
+  <polyline points="220,580 380,440 540,320 700,220" fill="none" stroke="#47bfff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- dots on trend line -->
+  <circle cx="220" cy="580" r="18" fill="#47bfff"/>
+  <circle cx="380" cy="440" r="18" fill="#47bfff"/>
+  <circle cx="540" cy="320" r="18" fill="#47bfff"/>
+  <circle cx="700" cy="220" r="18" fill="#47bfff"/>
+  <!-- $ symbol -->
+  <text x="820" y="200" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="160" fill="#863bff" text-anchor="middle">$</text>
+  <!-- baseline -->
+  <line x1="140" y1="820" x2="884" y2="820" stroke="#3b1f6e" stroke-width="8" stroke-linecap="round"/>
+</svg>
