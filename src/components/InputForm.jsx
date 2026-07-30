@@ -40,6 +40,29 @@ export default function InputForm({ inputs, setInputs, errors = {}, onBlur = () 
             <option value="36">36 months</option>
           </select>
         </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm text-gray-600 dark:text-gray-400">Discount Rate (%)</label>
+          <div className="relative">
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={inputs.discountRate}
+              onChange={set('discountRate')}
+              onBlur={() => onBlur('discountRate')}
+              aria-invalid={Boolean(errors.discountRate)}
+              className={`w-full bg-gray-50 dark:bg-gray-800 border rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-1 transition-colors ${
+                errors.discountRate
+                  ? 'border-red-400 dark:border-red-500 focus:border-red-400 focus:ring-red-400/20 dark:focus:ring-red-500/20'
+                  : 'border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500'
+              }`}
+            />
+          </div>
+          {errors.discountRate && (
+            <p className="text-red-600 dark:text-red-400 text-xs leading-none mt-0.5">{errors.discountRate}</p>
+          )}
+        </div>
       </div>
     </div>
   )

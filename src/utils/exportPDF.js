@@ -211,6 +211,31 @@ export async function exportPDF({
           'error'
         )
       }
+
+      // Monthly breakdown table
+      y = needPage(doc, y, 20)
+      y = section(doc, y, 'MONTHLY BREAKDOWN')
+      const fmt = (n) => currency.format(n)
+      const period = parseInt(inputs.period)
+      const monthlyRevenue = parseFloat(inputs.monthlyRevenue)
+      const monthlyCosts = parseFloat(inputs.monthlyCosts)
+      const investment = parseFloat(inputs.investment)
+      const net = monthlyRevenue - monthlyCosts
+      const monthlyRows = Array.from({ length: period }, (_, i) => {
+        const month = i + 1
+        const cumulative = net * month - investment
+        const roi = investment > 0 ? (cumulative / investment) * 100 : 0
+        return [month, fmt(monthlyRevenue), fmt(monthlyCosts), fmt(net), fmt(cumulative), roi.toFixed(1) + '%']
+      })
+      autoTable(doc, {
+        head: [['Month', 'Revenue', 'Costs', 'Net', 'Cumulative P/L', 'ROI %']],
+        body: monthlyRows,
+        startY: y,
+        margin: { left: M, right: M },
+        theme: 'striped',
+        styles: { fontSize: 8 },
+      })
+      y = doc.lastAutoTable.finalY + 8
     }
 
   } else {
@@ -300,6 +325,38 @@ export async function exportPDF({
         'success'
       )
     }
+
+    // Monthly breakdown tables for comparison mode
+    const scenarios = [
+      { label: 'SCENARIO A — MONTHLY BREAKDOWN', inp: inputs },
+      { label: 'SCENARIO B — MONTHLY BREAKDOWN', inp: inputsB },
+    ]
+    for (const { label: sLabel, inp } of scenarios) {
+      if (!inp) continue
+      y = needPage(doc, y, 20)
+      y = section(doc, y, sLabel)
+      const fmt = (n) => currency.format(n)
+      const period = parseInt(inp.period)
+      const monthlyRevenue = parseFloat(inp.monthlyRevenue)
+      const monthlyCosts = parseFloat(inp.monthlyCosts)
+      const investment = parseFloat(inp.investment)
+      const net = monthlyRevenue - monthlyCosts
+      const monthlyRows = Array.from({ length: period }, (_, i) => {
+        const month = i + 1
+        const cumulative = net * month - investment
+        const roi = investment > 0 ? (cumulative / investment) * 100 : 0
+        return [month, fmt(monthlyRevenue), fmt(monthlyCosts), fmt(net), fmt(cumulative), roi.toFixed(1) + '%']
+      })
+      autoTable(doc, {
+        head: [['Month', 'Revenue', 'Costs', 'Net', 'Cumulative P/L', 'ROI %']],
+        body: monthlyRows,
+        startY: y,
+        margin: { left: M, right: M },
+        theme: 'striped',
+        styles: { fontSize: 8 },
+      })
+      y = doc.lastAutoTable.finalY + 8
+    }
   }
 
   // ── Chart image ─────────────────────────────────────────────────────────────
@@ -332,5 +389,6 @@ export async function exportPDF({
     doc.text(`Page ${i} of ${pages}`, PW - M, PH - 7, { align: 'right' })
   }
 
+  // Security: filename uses system date only; no user input is interpolated; no sanitisation required.
   doc.save(`ROI-Analysis-${isoDate()}.pdf`)
 }

@@ -13,22 +13,41 @@ function fmtPayback(months) {
   return `${months.toLocaleString('en-US', { maximumFractionDigits: 1 })} months`
 }
 
+function fmtIRR(irr) {
+  if (irr === null || irr === undefined) return 'N/A'
+  return `${irr.toFixed(1)}%`
+}
+
 export default function ResultCards({ results }) {
-  const { roi, totalNetProfit, paybackMonths } = results
+  const { roi, totalNetProfit, paybackMonths, npv, irr } = results
 
   return (
-    <div className="grid grid-cols-3 gap-3">
-      <Card label="ROI" value={fmtRoi(roi)} positive={roi >= 0} accent />
-      <Card
-        label="Payback Period"
-        value={fmtPayback(paybackMonths)}
-        positive={paybackMonths !== null}
-      />
-      <Card
-        label="Net Profit"
-        value={currency.format(totalNetProfit)}
-        positive={totalNetProfit >= 0}
-      />
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-3">
+        <Card label="ROI" value={fmtRoi(roi)} positive={roi >= 0} accent />
+        <Card
+          label="Payback Period"
+          value={fmtPayback(paybackMonths)}
+          positive={paybackMonths !== null}
+        />
+        <Card
+          label="Net Profit"
+          value={currency.format(totalNetProfit)}
+          positive={totalNetProfit >= 0}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Card
+          label="NPV"
+          value={currency.format(Math.round(npv))}
+          positive={npv >= 0}
+        />
+        <Card
+          label="IRR"
+          value={fmtIRR(irr)}
+          positive={irr !== null && irr > 0}
+        />
+      </div>
     </div>
   )
 }
