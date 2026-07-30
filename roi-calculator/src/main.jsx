@@ -1,10 +1,22 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
+import EmbedPage from './pages/EmbedPage.jsx'
+import { ThemeProvider } from './context/ThemeContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        } />
+        <Route path="/embed" element={<EmbedPage />} />
+      </Routes>
+    </BrowserRouter>
   </StrictMode>,
 )

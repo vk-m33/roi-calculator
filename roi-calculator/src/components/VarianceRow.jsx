@@ -18,7 +18,7 @@ function paybackVariance(a, b) {
   if (pa === null) return { label: 'Only B recovers', winner: 'B', neutral: false }
   if (pb === null) return { label: 'Only A recovers', winner: 'A', neutral: false }
 
-  const delta = pb - pa // negative = B faster = B wins
+  const delta = pb - pa
   const abs = Math.abs(delta).toFixed(1)
   const label = delta < 0 ? `B is ${abs} mo faster` : delta > 0 ? `A is ${abs} mo faster` : 'Equal payback'
   return { label, winner: delta < 0 ? 'B' : delta > 0 ? 'A' : null, neutral: delta === 0 }
@@ -37,10 +37,10 @@ function profitVariance(a, b) {
 
 function VarCard({ heading, label, winner, neutral }) {
   const color = neutral
-    ? 'text-gray-400'
+    ? 'text-gray-500 dark:text-gray-400'
     : winner === 'B'
-    ? 'text-orange-400'
-    : 'text-indigo-400'
+    ? 'text-orange-600 dark:text-orange-400'
+    : 'text-indigo-600 dark:text-indigo-400'
 
   const winnerText = neutral ? null : `Scenario ${winner} wins`
 
@@ -48,7 +48,7 @@ function VarCard({ heading, label, winner, neutral }) {
     <div className="space-y-1.5">
       <p className="text-xs text-gray-500 uppercase tracking-widest">{heading}</p>
       <p className={`text-lg font-semibold leading-snug ${color}`}>{label}</p>
-      {winnerText && <p className="text-xs text-gray-600">{winnerText}</p>}
+      {winnerText && <p className="text-xs text-gray-400 dark:text-gray-600">{winnerText}</p>}
     </div>
   )
 }
@@ -59,11 +59,11 @@ export default function VarianceRow({ a, b }) {
   const profit = profitVariance(a, b)
 
   return (
-    <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-5">
         Variance — B vs A
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 sm:divide-x sm:divide-gray-800">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 sm:divide-x sm:divide-gray-200 dark:sm:divide-gray-800">
         <VarCard heading="ROI" {...roi} />
         <div className="sm:pl-4">
           <VarCard heading="Payback Period" {...payback} />

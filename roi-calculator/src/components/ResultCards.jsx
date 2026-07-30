@@ -36,14 +36,18 @@ export default function ResultCards({ results }) {
 function Card({ label, value, positive, accent }) {
   return (
     <div
-      className={`rounded-2xl p-5 border bg-gray-900 ${
-        accent ? 'border-indigo-500/40' : 'border-gray-800'
+      className={`rounded-2xl p-5 border bg-white dark:bg-gray-900 ${
+        accent
+          ? 'border-indigo-300/60 dark:border-indigo-500/40'
+          : 'border-gray-200 dark:border-gray-800'
       }`}
     >
       <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">{label}</p>
       <p
         className={`font-bold truncate ${accent ? 'text-2xl' : 'text-lg'} ${
-          positive ? 'text-emerald-400' : 'text-red-400'
+          positive
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-red-600 dark:text-red-400'
         }`}
       >
         {value}
