@@ -989,19 +989,52 @@ function Footer({ releases }) {
    PAGE (default export)
 ═══════════════════════════════════════════════════════════════ */
 
+function transformGithubRelease(data) {
+  const version = data.tag_name.replace(/^v/, '')
+  const releaseDate = data.published_at ? data.published_at.split('T')[0] : null
+
+  const find = (predicate) => data.assets.find(predicate) ?? null
+
+  const installer = find((a) => /setup\.exe$/i.test(a.name))
+  const msi       = find((a) => /\.msi$/i.test(a.name))
+  const dmg       = find((a) => /\.dmg$/i.test(a.name))
+  const appimage  = find((a) => /\.AppImage$/i.test(a.name))
+
+  const entry = (asset, platform, type, label) => ({
+    platform, type, label,
+    filename:  asset?.name ?? null,
+    sizeBytes: asset?.size ?? null,
+    url:       asset?.browser_download_url ?? null,
+    available: asset != null,
+  })
+
+  return {
+    version,
+    releaseDate,
+    downloads: [
+      entry(installer, 'windows', 'installer', 'Windows Installer (.exe)'),
+      entry(msi,       'windows', 'msi',       'Windows MSI Package'),
+      entry(dmg,       'macos',   'dmg',       'macOS Installer (.dmg)'),
+      entry(appimage,  'linux',   'appimage',  'Linux AppImage'),
+    ],
+  }
+}
+
 export default function LandingPage() {
   const [releases, setReleases] = useState(null)
   const [releasesLoading, setReleasesLoading] = useState(true)
   const [releasesError, setReleasesError] = useState(false)
 
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}api/releases.json`)
+    fetch('https://api.github.com/repos/vk-m33/roi-calculator/releases/latest', {
+      headers: { Accept: 'application/vnd.github+json' },
+    })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()
       })
       .then((data) => {
-        setReleases(data)
+        setReleases(transformGithubRelease(data))
         setReleasesLoading(false)
       })
       .catch(() => {
