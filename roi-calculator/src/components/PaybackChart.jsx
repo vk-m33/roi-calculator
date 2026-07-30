@@ -33,7 +33,7 @@ function mergeData(dataA, dataB) {
   }))
 }
 
-function CustomTooltip({ active, payload, label, isDark }) {
+function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm shadow-xl space-y-1">
@@ -64,10 +64,10 @@ export default function PaybackChart({ dataA, dataB, period }) {
   const chartData = hasA || hasB ? mergeData(dataA, dataB) : []
 
   // Theme-aware SVG color values (not Tailwind — these go to Recharts props)
-  const gridColor   = isDark ? '#1f2937' : '#e5e7eb'
-  const tickColor   = isDark ? '#6b7280' : '#6b7280'
-  const axisColor   = isDark ? '#374151' : '#d1d5db'
-  const refColor    = isDark ? '#6b7280' : '#9ca3af'
+  const gridColor = isDark ? '#1f2937' : '#e5e7eb'
+  const tickColor = '#6b7280' // gray-500 — identical in both light and dark
+  const axisColor = isDark ? '#374151' : '#d1d5db'
+  const refColor  = isDark ? '#6b7280' : '#9ca3af'
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800">
@@ -108,7 +108,7 @@ export default function PaybackChart({ dataA, dataB, period }) {
             tickLine={false}
             width={68}
           />
-          <Tooltip content={<CustomTooltip isDark={isDark} />} />
+          <Tooltip content={<CustomTooltip />} />
           <ReferenceLine
             y={0}
             stroke={refColor}
