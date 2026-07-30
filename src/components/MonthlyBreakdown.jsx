@@ -52,8 +52,8 @@ function exportCSV(rows, filename) {
 }
 
 function SortChevron({ active, dir }) {
-  if (!active) return <span className="ml-1 opacity-25 text-xs">↕</span>
-  return <span className="ml-1 text-indigo-400 text-xs">{dir === 'asc' ? '↑' : '↓'}</span>
+  if (!active) return <span className="ml-1 opacity-30 text-xs">↕</span>
+  return <span className="ml-1 text-indigo-500 dark:text-indigo-400 text-xs">{dir === 'asc' ? '↑' : '↓'}</span>
 }
 
 function BreakdownTable({ label, rows, sort, onSort, filename }) {
@@ -75,13 +75,13 @@ function BreakdownTable({ label, rows, sort, onSort, filename }) {
         }
         <button
           onClick={() => exportCSV(rows, filename)}
-          className="text-xs text-gray-600 hover:text-gray-300 transition-colors"
+          className="text-xs text-gray-400 dark:text-gray-600 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
         >
           Export CSV
         </button>
       </div>
 
-      <div className="overflow-auto max-h-80 rounded-xl border border-gray-800">
+      <div className="overflow-auto max-h-80 rounded-xl border border-gray-200 dark:border-gray-800">
         <table className="w-full text-sm min-w-[560px]">
           <thead>
             <tr>
@@ -89,7 +89,7 @@ function BreakdownTable({ label, rows, sort, onSort, filename }) {
                 <th
                   key={col.key}
                   onClick={() => toggle(col.key)}
-                  className={`sticky top-0 z-10 bg-gray-800 border-b border-gray-700 px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors select-none whitespace-nowrap ${
+                  className={`sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors select-none whitespace-nowrap ${
                     col.align === 'right' ? 'text-right' : 'text-left'
                   }`}
                 >
@@ -105,35 +105,37 @@ function BreakdownTable({ label, rows, sort, onSort, filename }) {
                 key={row.month}
                 className={
                   row.isBreakEven
-                    ? 'bg-emerald-950/40'
-                    : i % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800/20'
+                    ? 'bg-emerald-50/70 dark:bg-emerald-950/40'
+                    : i % 2 === 0
+                    ? 'bg-white dark:bg-gray-900'
+                    : 'bg-gray-50/60 dark:bg-gray-800/20'
                 }
               >
                 <td className="px-4 py-2.5">
                   <div className="flex items-center gap-2 whitespace-nowrap">
-                    <span className={row.isBreakEven ? 'font-medium text-emerald-400' : 'text-gray-300'}>
+                    <span className={row.isBreakEven ? 'font-medium text-emerald-700 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300'}>
                       {row.month}
                     </span>
                     {row.isBreakEven && (
-                      <span className="text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                      <span className="text-xs bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 px-1.5 py-0.5 rounded">
                         Break-even
                       </span>
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-2.5 text-right text-gray-400">
+                <td className="px-4 py-2.5 text-right text-gray-500 dark:text-gray-400">
                   {currency.format(row.revenue)}
                 </td>
-                <td className="px-4 py-2.5 text-right text-gray-400">
+                <td className="px-4 py-2.5 text-right text-gray-500 dark:text-gray-400">
                   {currency.format(row.costs)}
                 </td>
-                <td className={`px-4 py-2.5 text-right font-medium ${row.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <td className={`px-4 py-2.5 text-right font-medium ${row.netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                   {currency.format(row.netProfit)}
                 </td>
-                <td className={`px-4 py-2.5 text-right font-medium ${row.cumulative >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <td className={`px-4 py-2.5 text-right font-medium ${row.cumulative >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                   {currency.format(row.cumulative)}
                 </td>
-                <td className={`px-4 py-2.5 text-right font-medium ${row.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <td className={`px-4 py-2.5 text-right font-medium ${row.roi >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                   {row.roi.toFixed(1)}%
                 </td>
               </tr>
@@ -146,10 +148,10 @@ function BreakdownTable({ label, rows, sort, onSort, filename }) {
 }
 
 export default function MonthlyBreakdown({ resultsA, resultsB, comparing = false }) {
-  const [expanded,   setExpanded]   = useState(false)
-  const [sortA,      setSortA]      = useState({ col: 'month', dir: 'asc' })
-  const [sortB,      setSortB]      = useState({ col: 'month', dir: 'asc' })
-  const [activeTab,  setActiveTab]  = useState('A')
+  const [expanded,  setExpanded]  = useState(false)
+  const [sortA,     setSortA]     = useState({ col: 'month', dir: 'asc' })
+  const [sortB,     setSortB]     = useState({ col: 'month', dir: 'asc' })
+  const [activeTab, setActiveTab] = useState('A')
 
   const rowsA = resultsA ? buildRows(resultsA) : []
   const rowsB = resultsB ? buildRows(resultsB) : []
@@ -159,15 +161,15 @@ export default function MonthlyBreakdown({ resultsA, resultsB, comparing = false
   if (!hasA && !hasB) return null
 
   return (
-    <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       {/* Toggle */}
       <button
         onClick={() => setExpanded((e) => !e)}
-        className="w-full flex items-center justify-between px-6 py-4 text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"
+        className="w-full flex items-center justify-between px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
       >
         <span>Monthly Breakdown</span>
         <span
-          className="text-gray-600 text-xs transition-transform duration-200 inline-block"
+          className="text-gray-400 dark:text-gray-600 text-xs transition-transform duration-200 inline-block"
           style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}
         >
           ▼
@@ -175,20 +177,20 @@ export default function MonthlyBreakdown({ resultsA, resultsB, comparing = false
       </button>
 
       {expanded && (
-        <div className="px-6 pb-6 border-t border-gray-800">
+        <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-800">
           {comparing ? (
             <div className="mt-5 space-y-4">
               {/* Tab selector — narrow screens only, when both scenarios are present */}
               {hasA && hasB && (
-                <div className="flex lg:hidden gap-1 bg-gray-800 rounded-lg p-1 w-fit">
+                <div className="flex lg:hidden gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit">
                   {['A', 'B'].map((s) => (
                     <button
                       key={s}
                       onClick={() => setActiveTab(s)}
                       className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                         activeTab === s
-                          ? 'bg-gray-700 text-white'
-                          : 'text-gray-500 hover:text-gray-300'
+                          ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                       }`}
                     >
                       Scenario {s}
