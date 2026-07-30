@@ -6,37 +6,53 @@ import VarianceRow from './VarianceRow'
 import MonthlyBreakdown from './MonthlyBreakdown'
 import { exportPDF } from '../utils/exportPDF'
 
+// Security (AC-05): upper bound for all currency fields — prevents Infinity/NaN
+// from propagating into the calculation engine when a user enters astronomically
+// large numbers (e.g. 1e308 or 1e309).
+const MAX_CURRENCY = 999_999_999_999
+
 const DEFAULT_INPUTS = {
   investment: '100000',
   monthlyRevenue: '15000',
   monthlyCosts: '5000',
   period: '12',
+  discountRate: '10',
 }
 
-function validate({ investment, monthlyRevenue, monthlyCosts }) {
+function validate({ investment, monthlyRevenue, monthlyCosts, discountRate }) {
   const inv = parseFloat(investment)
   const rev = parseFloat(monthlyRevenue)
   const costs = parseFloat(monthlyCosts)
+  const rate = parseFloat(discountRate)
   const revValid = !isNaN(rev) && rev > 0
 
   return {
     investment:
       investment === '' ? 'Required' :
       isNaN(inv) ? 'Enter a valid number' :
-      inv < 1000 ? 'Minimum is $1,000' : '',
+      inv < 1000 ? 'Minimum is $1,000' :
+      inv > MAX_CURRENCY ? `Maximum value is ${MAX_CURRENCY.toLocaleString()}` : '',
 
     monthlyRevenue:
       monthlyRevenue === '' ? 'Required' :
       isNaN(rev) ? 'Enter a valid number' :
-      rev <= 0 ? 'Must be greater than $0' : '',
+      rev <= 0 ? 'Must be greater than $0' :
+      rev > MAX_CURRENCY ? `Maximum value is ${MAX_CURRENCY.toLocaleString()}` : '',
 
     monthlyCosts:
       monthlyCosts === '' ? 'Required' :
       isNaN(costs) ? 'Enter a valid number' :
       costs < 0 ? 'Must be $0 or more' :
+      costs > MAX_CURRENCY ? `Maximum value is ${MAX_CURRENCY.toLocaleString()}` :
       revValid && costs > rev ? 'Cannot exceed monthly revenue' : '',
 
     period: '',
+
+    discountRate:
+      discountRate === '' ? 'Required' :
+      isNaN(rate) ? 'Enter a valid number' :
+      rate < 0 ? 'Must be 0% or more' :
+      rate > 100 ? 'Cannot exceed 100%' : '',
   }
 }
 
@@ -50,33 +66,118 @@ function toVisible(allErrors, touched) {
   )
 }
 
+function computeIRR(investment, monthlyNet, period) {
+  // Security (AC-05): guard against Infinity/NaN propagating from out-of-range inputs
+  if (!isFinite(monthlyNet) || !isFinite(investment)) return null
+  if (investment <= 0 || monthlyNet <= 0) return null
+  // Positive IRR only exists when total undiscounted cash flows exceed investment
+  if (monthlyNet * period <= investment) return null
+
+  const npvAtRate = (r) => {
+    let sum = 0
+    for (let t = 1; t <= period; t++) {
+      sum += monthlyNet / Math.pow(1 + r, t)
+    }
+    return sum - investment
+  }
+
+  // Binary search: NPV(0) > 0, NPV(1.0) ≈ -investment < 0
+  let lo = 0
+  let hi = 1.0 // 100% monthly = 1,200% annual — practical upper bound
+  for (let i = 0; i < 100; i++) {
+    const mid = (lo + hi) / 2
+    if (npvAtRate(mid) > 0) lo = mid
+    else hi = mid
+    if (hi - lo < 1e-10) break
+  }
+  return ((lo + hi) / 2) * 12 * 100 // annualised percentage
+}
+
 function calculate(inputs) {
   const investment = parseFloat(inputs.investment)
   const monthlyRevenue = parseFloat(inputs.monthlyRevenue)
   const monthlyCosts = parseFloat(inputs.monthlyCosts)
   const period = parseInt(inputs.period) || 12
+  const discountRate = parseFloat(inputs.discountRate) || 0
 
   const monthlyNet = monthlyRevenue - monthlyCosts
+
+  // Security (AC-05): defence-in-depth guard — isFormValid() already blocks
+  // infinite/NaN values through validate(), but this guard ensures calculate()
+  // is safe if called directly (e.g. during testing or future refactoring).
+  if (!isFinite(monthlyNet) || !isFinite(investment)) return null
   const totalNetProfit = monthlyNet * period - investment
   const roi = investment > 0 ? (totalNetProfit / investment) * 100 : 0
   const paybackMonths = monthlyNet > 0 && investment > 0 ? investment / monthlyNet : null
+
+  // NPV
+  const monthlyRate = discountRate / 100 / 12
+  let npv = -investment
+  for (let t = 1; t <= period; t++) {
+    npv += monthlyNet / Math.pow(1 + monthlyRate, t)
+  }
+
+  // IRR
+  const irr = computeIRR(investment, monthlyNet, period)
 
   const chartData = Array.from({ length: period + 1 }, (_, i) => ({
     month: i,
     cashFlow: Math.round(-investment + i * monthlyNet),
   }))
 
-  return { investment, monthlyRevenue, monthlyCosts, monthlyNet, totalNetProfit, roi, paybackMonths, period, chartData }
+  return { investment, monthlyRevenue, monthlyCosts, monthlyNet, totalNetProfit, roi, paybackMonths, period, chartData, npv, irr }
 }
 
-function ScenarioLabel({ label, winner }) {
+function ScenarioLabel({ label, onRename, winner, onDelete }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(label)
+
+  const commit = () => {
+    const trimmed = draft.trim()
+    if (trimmed) onRename(trimmed)
+    else setDraft(label)
+    setEditing(false)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') commit()
+    if (e.key === 'Escape') { setDraft(label); setEditing(false) }
+  }
+
   return (
     <div className="flex items-center gap-2.5 h-7">
-      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
+      {editing ? (
+        <input
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="text-sm font-semibold text-gray-700 dark:text-gray-300 bg-transparent border-b border-indigo-500 focus:outline-none w-40"
+        />
+      ) : (
+        <span
+          className="text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+          onClick={() => { setDraft(label); setEditing(true) }}
+          title="Click to rename"
+        >
+          {label}
+        </span>
+      )}
       {winner && (
         <span className="text-xs font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">
           Better ROI
         </span>
+      )}
+      {onDelete && (
+        <button
+          onClick={onDelete}
+          className="ml-auto text-gray-400 hover:text-red-500 transition-colors text-lg leading-none"
+          title="Remove scenario"
+          aria-label="Remove scenario B"
+        >
+          ×
+        </button>
       )}
     </div>
   )
@@ -127,6 +228,8 @@ export default function CalculatorCore() {
   const [touchedB, setTouchedB] = useState({})
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState(null)
+  const [labelA, setLabelA] = useState('Scenario A')
+  const [labelB, setLabelB] = useState('Scenario B')
   const chartRef = useRef(null)
 
   const allErrorsA = validate(inputs)
@@ -153,6 +256,13 @@ export default function CalculatorCore() {
       setTouchedB({})
     }
     setComparing((c) => !c)
+  }
+
+  const deleteScenarioB = () => {
+    setComparing(false)
+    setInputsB({ ...DEFAULT_INPUTS })
+    setTouchedB({})
+    setLabelB('Scenario B')
   }
 
   const handleExport = async () => {
@@ -186,12 +296,12 @@ export default function CalculatorCore() {
         <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <ScenarioLabel label="Scenario A" winner={aWins} />
+              <ScenarioLabel label={labelA} onRename={setLabelA} winner={aWins} />
               <InputForm inputs={inputs} setInputs={setInputs} errors={errorsA} onBlur={handleBlurA} />
               {resultsA ? <ResultCards results={resultsA} /> : <EmptyResults />}
             </div>
             <div className="space-y-4">
-              <ScenarioLabel label="Scenario B" winner={bWins} />
+              <ScenarioLabel label={labelB} onRename={setLabelB} winner={bWins} onDelete={deleteScenarioB} />
               <InputForm inputs={inputsB} setInputs={setInputsB} errors={errorsB} onBlur={handleBlurB} />
               {resultsB ? <ResultCards results={resultsB} /> : <EmptyResults />}
             </div>

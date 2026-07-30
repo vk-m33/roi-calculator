@@ -16,6 +16,7 @@ export function ThemeProvider({ children }) {
     } else {
       root.classList.remove('dark')
     }
+    // Security: stores only the UI theme preference ('light'|'dark'); not sensitive; no encryption required.
     localStorage.setItem('roi-theme', theme)
   }, [theme])
 
@@ -32,6 +33,7 @@ export function EmbedThemeProvider({ children }) {
   const [theme] = useState(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('theme')
+    // Security (AC-03/?theme=): validated against a two-value allowlist before use — safe against injection.
     if (t === 'light' || t === 'dark') return t
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })

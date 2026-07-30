@@ -49,6 +49,7 @@ export default function EmbedModal({ onClose }) {
   const [height, setHeight] = useState(DEFAULTS.height)
   const [embedTheme, setEmbedTheme] = useState(DEFAULTS.theme)
   const [baseUrl, setBaseUrl] = useState(() => window.location.origin)
+  const [baseUrlError, setBaseUrlError] = useState('')
   const [copied, setCopied] = useState(false)
   const modalRef = useRef(null)
 
@@ -64,34 +65,65 @@ export default function EmbedModal({ onClose }) {
   }, [])
 
   const themeParam = embedTheme !== 'system' ? `?theme=${embedTheme}` : ''
+  // Security (AC-03/INFO): previewUrl is always derived from window.location.origin,
+  // not from the user-supplied baseUrl, so it is not subject to injection risk.
   const previewUrl = `${window.location.origin}/embed${themeParam}`
 
-  const embedUrl = (() => {
+  // Security (AC-03/CRITICAL): embedUrl is only constructed when baseUrl passes
+  // new URL() validation. The raw-string-concatenation catch-block fallback has been
+  // removed entirely — it allowed a malicious base URL to break out of the src attribute.
+  // If new URL() throws, embedUrl remains null and the UI shows an error instead.
+  let embedUrl = null
+  const trimmedBase = baseUrl.trim()
+  if (!trimmedBase) {
+    // Empty input: fall back to the current origin (always valid)
+    const _url = new URL('/embed', window.location.origin)
+    if (embedTheme !== 'system') _url.searchParams.set('theme', embedTheme)
+    embedUrl = _url.toString()
+  } else {
     try {
-      const url = new URL('/embed', baseUrl.trim() || window.location.origin)
-      if (embedTheme !== 'system') url.searchParams.set('theme', embedTheme)
-      return url.toString()
+      new URL(trimmedBase) // Validate first — throws for malformed or adversarial input
+      const _url = new URL('/embed', trimmedBase)
+      if (embedTheme !== 'system') _url.searchParams.set('theme', embedTheme)
+      embedUrl = _url.toString()
     } catch {
-      return `${baseUrl.trim()}/embed${themeParam}`
+      // embedUrl remains null; error is shown below the Base URL field
     }
-  })()
+  }
 
   const widthAttr = width === '100%' ? '100%' : width
-  const embedCode = [
-    '<iframe',
-    `  src="${embedUrl}"`,
-    `  width="${widthAttr}"`,
-    `  height="${height}"`,
-    '  frameborder="0"',
-    '  style="border: none; border-radius: 12px;"',
-    '  title="ROI Calculator"',
-    '></iframe>',
-  ].join('\n')
+  // Security (AC-04/HIGH): sandbox and referrerpolicy attributes added to harden the
+  // generated snippet. sandbox="allow-scripts allow-same-origin allow-forms" is the
+  // minimum set needed for the React app and form inputs inside the iframe to function;
+  // allow-top-navigation and allow-popups are intentionally omitted.
+  // referrerpolicy="no-referrer" prevents the host page URL from leaking to the
+  // embedded origin's server logs.
+  // embedCode is null when embedUrl is null so the snippet is never rendered for invalid URLs.
+  const embedCode = embedUrl
+    ? [
+        '<iframe',
+        `  src="${embedUrl}"`,
+        `  width="${widthAttr}"`,
+        `  height="${height}"`,
+        '  frameborder="0"',
+        '  style="border: none; border-radius: 12px;"',
+        '  sandbox="allow-scripts allow-same-origin allow-forms"',
+        '  referrerpolicy="no-referrer"',
+        '  title="ROI Calculator"',
+        '></iframe>',
+      ].join('\n')
+    : null
+
+  // Security (AC-07/LOW): warn when the base URL uses plain HTTP. Advisory only —
+  // HTTP may be valid for local development, so generation is not blocked.
+  const showHttpWarning = trimmedBase.startsWith('http://')
 
   const handleCopy = async () => {
+    if (!embedCode) return
     try {
       await navigator.clipboard.writeText(embedCode)
     } catch {
+      // TODO: remove deprecated execCommand fallback
       const ta = document.createElement('textarea')
       ta.value = embedCode
       ta.style.cssText = 'position:fixed;opacity:0'
@@ -116,6 +148,24 @@ export default function EmbedModal({ onClose }) {
     setHeight(DEFAULTS.height)
     setEmbedTheme(DEFAULTS.theme)
     setBaseUrl(window.location.origin)
+    setBaseUrlError('')
+  }
+
+  // On blur, attempt new URL() validation and surface an error if it throws.
+  // On change, the error is cleared immediately so the user can correct their input
+  // without waiting for another blur.
+  const handleBaseUrlBlur = () => {
+    const val = baseUrl.trim()
+    if (!val) {
+      setBaseUrlError('')
+      return
+    }
+    try {
+      new URL(val)
+      setBaseUrlError('')
+    } catch {
+      setBaseUrlError('Invalid URL — must start with https:// or http://')
+    }
   }
 
   return (
@@ -169,13 +219,28 @@ export default function EmbedModal({ onClose }) {
               <input
                 type="url"
                 value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
+                onChange={(e) => { setBaseUrl(e.target.value); setBaseUrlError('') }}
+                onBlur={handleBaseUrlBlur}
                 placeholder="https://your-domain.com"
-                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                className={`w-full bg-gray-50 dark:bg-gray-800 border rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 transition-colors ${
+                  baseUrlError
+                    ? 'border-red-400 dark:border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:ring-indigo-500'
+                }`}
               />
-              <p className="text-xs text-gray-400 dark:text-gray-600">
-                Your deployment domain. Preview always uses the current origin.
-              </p>
+              {baseUrlError && (
+                <p className="text-xs text-red-600 dark:text-red-400">{baseUrlError}</p>
+              )}
+              {!baseUrlError && showHttpWarning && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  ⚠ HTTP URLs are not secure. Use HTTPS for production deployments.
+                </p>
+              )}
+              {!baseUrlError && !showHttpWarning && (
+                <p className="text-xs text-gray-400 dark:text-gray-600">
+                  Your deployment domain. Preview always uses the current origin.
+                </p>
+              )}
             </div>
 
             {!isDefault && (
@@ -217,7 +282,8 @@ export default function EmbedModal({ onClose }) {
                 </p>
                 <button
                   onClick={handleCopy}
-                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                  disabled={!embedUrl}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                     copied
                       ? 'border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                       : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-gray-600'
@@ -241,9 +307,15 @@ export default function EmbedModal({ onClose }) {
                   )}
                 </button>
               </div>
-              <pre className="bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 overflow-x-auto font-mono whitespace-pre">
-                {embedCode}
-              </pre>
+              {embedUrl ? (
+                <pre className="bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-xs leading-relaxed text-gray-700 dark:text-gray-300 overflow-x-auto font-mono whitespace-pre">
+                  {embedCode}
+                </pre>
+              ) : (
+                <div className="bg-gray-50 dark:bg-gray-800/80 border border-red-200 dark:border-red-500/30 rounded-xl p-4 text-xs text-red-600 dark:text-red-400 font-mono">
+                  Enter a valid Base URL to generate the embed code.
+                </div>
+              )}
             </div>
 
             {/* Instructions */}
