@@ -995,7 +995,7 @@ export default function LandingPage() {
   const [releasesError, setReleasesError] = useState(false)
 
   useEffect(() => {
-    fetch('/api/releases.json')
+    fetch(`${import.meta.env.BASE_URL}api/releases.json`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()
