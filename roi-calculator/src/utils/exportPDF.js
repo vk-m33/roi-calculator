@@ -155,6 +155,7 @@ export async function exportPDF({
         ['Monthly Revenue',    currency.format(parseFloat(inputs.monthlyRevenue))],
         ['Monthly Costs',      currency.format(parseFloat(inputs.monthlyCosts))],
         ['Calculation Period', `${inputs.period} months`],
+        ['Discount Rate',      `${inputs.discountRate}%`],
       ],
       styles:             { fontSize: 9, cellPadding: 3.5, textColor: C.gray700 },
       columnStyles: {
@@ -179,6 +180,8 @@ export async function exportPDF({
           ['ROI',            fmtRoi(resultsA.roi)],
           ['Payback Period', fmtPay(resultsA.paybackMonths)],
           ['Net Profit',     currency.format(resultsA.totalNetProfit)],
+          ['NPV',            resultsA.npv != null ? currency.format(resultsA.npv) : 'N/A'],
+          ['IRR',            resultsA.irr != null ? `${resultsA.irr.toFixed(2)}%` : 'N/A'],
         ],
         styles:             { fontSize: 9, cellPadding: 3.5, textColor: C.gray700 },
         columnStyles: {
@@ -189,8 +192,15 @@ export async function exportPDF({
         theme: 'plain',
         didParseCell(data) {
           if (data.column.index === 1 && data.section === 'body') {
-            const vals = [resultsA.roi, resultsA.paybackMonths ?? 0, resultsA.totalNetProfit]
-            data.cell.styles.textColor = posColor(vals[data.row.index])
+            const vals = [
+              resultsA.roi,
+              resultsA.paybackMonths ?? 0,
+              resultsA.totalNetProfit,
+              resultsA.npv,
+              resultsA.irr,
+            ]
+            const v = vals[data.row.index]
+            if (v != null) data.cell.styles.textColor = posColor(v)
           }
         },
       })
@@ -257,6 +267,7 @@ export async function exportPDF({
           currency.format(parseFloat(inputs.monthlyCosts)),
           currency.format(parseFloat(inputsB.monthlyCosts))],
         ['Calculation Period', `${inputs.period} months`, `${inputsB.period} months`],
+        ['Discount Rate', `${inputs.discountRate}%`, `${inputsB.discountRate}%`],
       ],
       styles:             { fontSize: 8.5, cellPadding: 3, textColor: C.gray700 },
       headStyles:         { fillColor: C.gray700, textColor: C.white, fontSize: 8, fontStyle: 'bold' },
@@ -279,6 +290,11 @@ export async function exportPDF({
         ? resultsB.paybackMonths - resultsA.paybackMonths
         : null
     const profDelta   = resultsA && resultsB ? resultsB.totalNetProfit - resultsA.totalNetProfit : null
+    const npvDelta    = resultsA && resultsB ? resultsB.npv - resultsA.npv : null
+    const irrDelta    =
+      resultsA?.irr != null && resultsB?.irr != null
+        ? resultsB.irr - resultsA.irr
+        : null
 
     const delta = (v, suffix = '') =>
       v === null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}${suffix}`
@@ -300,6 +316,14 @@ export async function exportPDF({
           resultsA ? currency.format(resultsA.totalNetProfit) : '—',
           resultsB ? currency.format(resultsB.totalNetProfit) : '—',
           profDelta !== null ? fmtProfit(profDelta) : '—'],
+        ['NPV',
+          resultsA ? currency.format(resultsA.npv) : '—',
+          resultsB ? currency.format(resultsB.npv) : '—',
+          npvDelta !== null ? fmtProfit(npvDelta) : '—'],
+        ['IRR',
+          resultsA?.irr != null ? `${resultsA.irr.toFixed(2)}%` : 'N/A',
+          resultsB?.irr != null ? `${resultsB.irr.toFixed(2)}%` : 'N/A',
+          irrDelta !== null ? delta(irrDelta, ' pp') : '—'],
       ],
       styles:             { fontSize: 8.5, cellPadding: 3, textColor: C.gray700 },
       headStyles:         { fillColor: C.gray700, textColor: C.white, fontSize: 8, fontStyle: 'bold' },
