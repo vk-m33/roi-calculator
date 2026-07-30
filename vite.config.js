@@ -8,6 +8,9 @@ const host = process.env.TAURI_DEV_HOST
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 
+  // GitHub Pages deployment uses /roi-calculator/ base; Tauri and local dev use /
+  base: process.env.VITE_BASE_PATH || '/',
+
   // Prevent Vite from obscuring Rust compile errors in the terminal
   clearScreen: false,
 
